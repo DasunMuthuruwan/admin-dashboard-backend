@@ -4,8 +4,37 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @OA\Schema(
+ *      title="Store Or Update Role Data",
+ *      description="Store or Update Role Request body data"
+ * )
+ */
+
+
 class RoleRequest extends FormRequest
 {
+    /**
+     * @OA\Property(
+     *      title="name"
+     * )
+     *
+     *  @var string
+     */
+    public $name;
+
+    /**
+     * @OA\Property(
+     *      title="per",
+     *      @OA\Items(
+     *          type="integer"
+     *    )
+     * )
+     *
+     *  @var array
+     */
+    public $per;
+
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -24,7 +53,7 @@ class RoleRequest extends FormRequest
     public function rules()
     {
         return [
-            'name' => 'required'
+            'name' => 'required',
         ];
     }
 }

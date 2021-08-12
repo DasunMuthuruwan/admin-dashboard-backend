@@ -9,6 +9,8 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
 use App\Models\Role;
 
+use function PHPUnit\Framework\isEmpty;
+
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
@@ -52,10 +54,17 @@ class User extends Authenticatable
     }
 
     public function permissions(){
-        return $this->role->permissions->pluck('name');
+        // return $this->role->contains();
+        if(!isEmpty($this->role)){
+            return $this->role->permissions->pluck('name');
+        }
+        return "no role available";
     }
 
     public function hasAccess($access){
-        return $this->permissions()->contains($access);
+        if(!isEmpty($this->role)){
+            return $this->permissions()->contains($access);
+        }
+        return "Not Permission Found";
     }
 }

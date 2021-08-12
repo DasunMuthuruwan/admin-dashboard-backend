@@ -9,6 +9,19 @@ use App\Models\Permission;
 
 class PermissionController extends Controller
 {
+
+          /**
+         * @OA\Get(
+         *      path="/permissions",
+         *      security={{"bearerAuth":{}}},
+         *      tags={"Permissions"},
+         *      @OA\Response(
+         *          response=200,
+         *          description="Permission Collection"
+         *      )
+         * )
+         */
+
     //
     public function index(){
         return PermissionResource::collection(Permission::all());

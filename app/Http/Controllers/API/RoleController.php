@@ -7,11 +7,27 @@ use App\Http\Requests\RoleRequest;
 use App\Http\Resources\RoleResource;
 use Illuminate\Http\Request;
 use App\Models\Role;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\Response;
 
+use function PHPUnit\Framework\isEmpty;
+
 class RoleController extends Controller
 {
+
+    /**
+     * @OA\Get(
+     *      path="/roles",
+     *      security={{"bearerAuth":{}}},
+     *      tags={"Roles"},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Roles Collection"
+     *      )
+     * )
+     */
+
     /**
      * Display a listing of the resource.
      *
@@ -25,6 +41,29 @@ class RoleController extends Controller
             'role' => RoleResource::collection(Role::all())
         ], 200);
     }
+
+
+
+    /**
+     * @OA\Post(
+     *      path="/roles",
+     *      security={{"bearerAuth":{}}},
+     *      tags={"Roles"},
+     *      description="Store Role data",
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(ref="#/components/schemas/RoleRequest")
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Role",
+     *          @OA\MediaType(
+     *              mediaType="application/json",
+     *          )
+     *      )
+     * )
+     */
+
 
     /**
      * Store a newly created resource in storage.
@@ -61,6 +100,26 @@ class RoleController extends Controller
     }
 
     /**
+     * @OA\Get(
+     *      path="/roles/{id}",
+     *      security={{"bearerAuth":{}}},
+     *      tags={"Roles"},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Get Single Role Details"
+     *      ),
+     *      @OA\Parameter(
+     *          name="id",
+     *          description="Role ID",
+     *          in="path",
+     *          @OA\Schema(
+     *              type="integer"
+     *          )
+     *      )
+     * )
+     */
+
+    /**
      * Display the specified resource.
      *
      * @param  int  $id
@@ -76,6 +135,35 @@ class RoleController extends Controller
     }
 
     /**
+     * @OA\Put(
+     *      path="/roles/{id}",
+     *      security={{"bearerAuth":{}}},
+     *      description="Update Role data",
+     *      tags={"Roles"},
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(ref="#/components/schemas/RoleRequest")
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Role Updated Successfully",
+     *          @OA\MediaType(
+     *              mediaType="application/json",
+     *          )
+     *      ),
+     *
+     *      @OA\Parameter(
+     *          name="id",
+     *          description="Role ID",
+     *          in="path",
+     *          @OA\Schema(
+     *              type="integer"
+     *          )
+     *   )
+     * )
+     */
+
+    /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -86,7 +174,7 @@ class RoleController extends Controller
     {
         Gate::authorize('edit', 'roles');
         $role = Role::find($id);
-        $permissions = $request->input('permissions');
+        $permissions = $request->input('per');
         if ($permissions) {
 
             // Firstly Delete role_id with the permission id
@@ -110,6 +198,37 @@ class RoleController extends Controller
         ], Response::HTTP_NOT_FOUND);
     }
 
+
+    // Delete Role Details
+
+    /**
+     * @OA\Delete(
+     *      path="/roles/{id}",
+     *      security={{"bearerAuth":{}}},
+     *      tags={"Roles"},
+     *      description="Delete Role data",
+     *      @OA\Response(
+     *          response=200,
+     *          description="Role deleted successfully",
+     *          @OA\MediaType(
+     *              mediaType="application/json",
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="not found"
+     *      ),
+     *      @OA\Parameter(
+     *          name="id",
+     *          description="Role ID",
+     *          in="path",
+     *          @OA\Schema(
+     *              type="integer"
+     *          )
+     *   )
+     * )
+     */
+
     /**
      * Remove the specified resource from storage.
      *
@@ -120,12 +239,19 @@ class RoleController extends Controller
     {
         Gate::authorize('edit', 'roles');
         $role = Role::find($id);
-        $role->permissions()->detach();
-        $role->delete();
 
+        if (DB::table('roles')->where('id', $id)->exists()) {
+            $role->permissions()->detach();
+            $role->delete();
+
+            return response()->json([
+                'status' => 1,
+                'message' => 'Role deleted successfully'
+            ]);
+        }
         return response()->json([
-            'status' => 1,
-            'message' => 'Role deleted successfully'
+            'status' => 0,
+            'message' => 'Role ID not Found'
         ]);
     }
 }

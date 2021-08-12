@@ -13,13 +13,55 @@ use Illuminate\Support\Facades\Gate;
 
 class OrderController extends Controller
 {
+
+          /**
+         * @OA\Get(
+         *      path="/orders",
+         *      security={{"bearerAuth":{}}},
+         *      tags={"Orders"},
+         *      @OA\Response(
+         *          response=200,
+         *          description="Order Collection"
+         *      ),
+         *      @OA\Parameter(
+         *          name="page",
+         *          description="Page Pagination",
+         *          in="query",
+         *          @OA\Schema(
+         *              type="integer"
+         *          )
+         *      )
+         * )
+         */
+
     // get orders details
     public function index(){
         Gate::authorize('view','orders');
         return response()->json([
-            'orders' => OrderResource::collection(Order::paginate())
+            'orders' => OrderResource::collection(Order::paginate(8))
         ]);
     }
+
+    /**
+         * @OA\Get(
+         *      path="/orders/{id}",
+         *      security={{"bearerAuth":{}}},
+         *      tags={"Orders"},
+         *      @OA\Response(
+         *          response=200,
+         *          description="Get Single User Details"
+         *      ),
+         *      @OA\Parameter(
+         *          name="id",
+         *          description="Order ID",
+         *          in="path",
+         *          @OA\Schema(
+         *              type="integer"
+         *          )
+         *      )
+         * )
+         */
+
 
     // get single order details
     public function show($id){
@@ -28,6 +70,18 @@ class OrderController extends Controller
             'order' => new OrderResource(Order::find($id))
         ]);
     }
+
+    /**
+     * @OA\Get(
+     *      path="/export_csv",
+     *      security={{"bearerAuth":{}}},
+     *      tags={"Orders"},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Downloaded Orders csv file"
+     *      )
+     * )
+     */
 
     // export orders csv file
     public function export(){
@@ -52,7 +106,7 @@ class OrderController extends Controller
                 fputcsv($file,[$order->id, $order->name, $order->email, '', '', '']);
 
                 foreach($order->orderItems as $orderItem){
-                    fputcsv($file,['', '', '', $orderItem->product_title, $orderItem->price_with_curency, $orderItem->quantity, $orderItem->item_quantity_price]);
+                    fputcsv($file,['', '', '', $orderItem->product_title, $orderItem->price, $orderItem->quantity, $orderItem->item_quantity_price]);
                 }
             }
 

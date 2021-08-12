@@ -8,12 +8,26 @@ use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 
 class ProductController extends Controller
 {
+
+    /**
+     * @OA\Get(
+     *      path="/products",
+     *      security={{"bearerAuth":{}}},
+     *      tags={"Products"},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Products Collection"
+     *      )
+     * )
+     */
+
     /**
      * Display a listing of the resource.
      *
@@ -31,6 +45,26 @@ class ProductController extends Controller
     }
 
     /**
+         * @OA\Post(
+         *      path="/products",
+         *      security={{"bearerAuth":{}}},
+         *      tags={"Products"},
+         *      description="Store Product data",
+         *      @OA\RequestBody(
+         *          required=true,
+         *          @OA\JsonContent(ref="#/components/schemas/ProductRequest")
+         *      ),
+         *      @OA\Response(
+         *          response=200,
+         *          description="Product create success",
+         *          @OA\MediaType(
+         *              mediaType="application/json",
+         *          )
+         *      )
+         * )
+         */
+
+    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -42,10 +76,32 @@ class ProductController extends Controller
         $newProduct = Product::create($request->only('title','description','image','price'));
 
         return response()->json([
-            'data' => $newProduct
+            'data' => $newProduct,
+            'message' => 'Product created successfully'
         ]);
         // return response(new ProductResource($newProduct), Response::HTTP_CREATED);
     }
+
+
+    /**
+     * @OA\Get(
+     *      path="/products/{id}",
+     *      security={{"bearerAuth":{}}},
+     *      tags={"Products"},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Get Single Products Details"
+     *      ),
+     *      @OA\Parameter(
+     *          name="id",
+     *          description="Product ID",
+     *          in="path",
+     *          @OA\Schema(
+     *              type="integer"
+     *          )
+     *      )
+     * )
+     */
 
     /**
      * Display the specified resource.
@@ -63,6 +119,36 @@ class ProductController extends Controller
             'data' => new ProductResource($product)
         ]);
     }
+
+
+      /**
+     * @OA\Put(
+     *      path="/products/{id}",
+     *      security={{"bearerAuth":{}}},
+     *      description="Update Product data",
+     *      tags={"Products"},
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(ref="#/components/schemas/ProductRequest")
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Product Updated Successfully",
+     *          @OA\MediaType(
+     *              mediaType="application/json",
+     *          )
+     *      ),
+     *
+     *      @OA\Parameter(
+     *          name="id",
+     *          description="Product ID",
+     *          in="path",
+     *          @OA\Schema(
+     *              type="integer"
+     *          )
+     *   )
+     * )
+     */
 
     /**
      * Update the specified resource in storage.
@@ -85,6 +171,35 @@ class ProductController extends Controller
         ]);
     }
 
+
+    /**
+     * @OA\Delete(
+     *      path="/products/{id}",
+     *      security={{"bearerAuth":{}}},
+     *      tags={"Products"},
+     *      description="Delete Product data",
+     *      @OA\Response(
+     *          response=200,
+     *          description="Product deleted successfully",
+     *          @OA\MediaType(
+     *              mediaType="application/json",
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="not found"
+     *      ),
+     *      @OA\Parameter(
+     *          name="id",
+     *          description="Product ID",
+     *          in="path",
+     *          @OA\Schema(
+     *              type="integer"
+     *          )
+     *   )
+     * )
+     */
+
     /**
      * Remove the specified resource from storage.
      *
@@ -95,10 +210,18 @@ class ProductController extends Controller
     {
         //
         Gate::authorize('edit','products');
-        Product::destroy($id);
+        
+        if(DB::table('products')->where('id',$id)->exists()){
+            Product::destroy($id);
+            return response()->json([
+                'status' => 1,
+                'message'=> 'Product deleted successfully'
+            ]);
+        }
+
         return response()->json([
-            'status' => 1,
-            'message'=> 'Product deleted successfully'
+            'status' => 0,
+            'message'=> 'Product Not Found'
         ]);
     }
 }
